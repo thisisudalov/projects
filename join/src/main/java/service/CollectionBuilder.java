@@ -22,13 +22,11 @@ public class CollectionBuilder {
         }
     }
 
-    public List<RecordToFile> buildArrayListImpl(List<List<RecordFromFile>> bothLists) {
-        List<RecordFromFile> listOne = bothLists.get(0);
-        List<RecordFromFile> listTwo = bothLists.get(1);
+    public List<RecordToFile> buildArrayListImpl(List<RecordFromFile> recordsFromArrayListOne, List<RecordFromFile> recordsFromArrayListTwo) {
         List<RecordToFile> resultList = new ArrayList<>();
 
-        for (RecordFromFile recordOuter : listOne) {
-            for (RecordFromFile recordInner : listTwo) {
+        for (RecordFromFile recordOuter : recordsFromArrayListOne) {
+            for (RecordFromFile recordInner : recordsFromArrayListTwo) {
                 if (recordInner.getId().equals(recordOuter.getId())) {
                     resultList.add(new RecordToFile(recordInner.getId(), recordInner.getValue(), recordOuter.getValue()));
                 }
@@ -37,83 +35,138 @@ public class CollectionBuilder {
         return resultList;
     }
 
-    public List<RecordToFile> buildLinkedListImpl(List<List<RecordFromFile>> bothLists) {
-        List<RecordFromFile> listOne = bothLists.get(0);
-        List<RecordFromFile> listTwo = bothLists.get(1);
+    public List<RecordToFile> buildLinkedListImpl(List<RecordFromFile> recordsFromArrayListOne, List<RecordFromFile> recordsFromArrayListTwo) {
+        LinkedList<RecordFromFile> listOne = new LinkedList<>(recordsFromArrayListOne);
+        LinkedList<RecordFromFile> listTwo = new LinkedList<>(recordsFromArrayListTwo);
         listOne.sort(Comparator.comparing(RecordFromFile::getId));
         listTwo.sort(Comparator.comparing(RecordFromFile::getId));
         List<RecordToFile> resultList = new LinkedList<>();
 
-        int index1 = 0;
-        int index2 = 0;
-        boolean leftOrRight = true; //TRUE когда элемент правого списка двигается по левому, FALSE - наоборот
+        ListIterator<RecordFromFile> it1 = listOne.listIterator();
+        ListIterator<RecordFromFile> it2 = listTwo.listIterator();
 
-        while ((listOne.size() > index1) && (listTwo.size() > index2)) {
-                RecordFromFile listOneElem = listOne.get(index1);
-                RecordFromFile listTwoElem = listTwo.get(index2);
-                //System.out.println(index1 + " " + index2);
-                if (listOneElem.getId() > listTwoElem.getId()) {
-                    index2++;
-                    leftOrRight = true;
-                    continue;
-                }
+        boolean exitCondition = false;
+        RecordFromFile currentLeft = it1.next();
+        RecordFromFile currentRight = it2.next();
 
-                if (listOneElem.getId() < listTwoElem.getId()) {
-                    index1++;
-                    leftOrRight = false;
-                    continue;
-                }
+        for (Iterator it = listOne.iterator(); it.hasNext(); ) {
+            System.out.println(it.next());
+        }
 
-                if (listOneElem.getId().equals(listTwoElem.getId())) {
-                    if ((index1 + 1 < listOne.size()) &&
-                            (index2 + 1 < listTwo.size()) &&
-                            (listOne.get(index1 + 1).getId().equals(listOneElem.getId())) &&
-                            (listOne.get(index1 + 1).getId().equals(listTwo.get(index2 + 1).getId()))) {
-
-                        List<RecordFromFile> temporaryListOne = new LinkedList<>();
-                        temporaryListOne.add(listOneElem);
-                        while ((index1 + 1 < listOne.size()) && listOne.get(index1 + 1).getId().equals(listOne.get(index1).getId())) {
-                            temporaryListOne.add(listOne.get(index1 + 1));
-                            index1++;
-                        }
-                        index1++;
-
-                        List<RecordFromFile> temporaryListTwo = new LinkedList<>();
-                        temporaryListTwo.add(listTwoElem);
-                        while ((index2 + 1 < listTwo.size()) && listTwo.get(index2 + 1).getId().equals(listTwo.get(index2).getId())) {
-                            temporaryListTwo.add(listTwo.get(index2 + 1));
-                            index2++;
-                        }
-                        index2++;
-
-                        for (RecordFromFile outerRecord : temporaryListOne) {
-                            for (RecordFromFile innerRecord : temporaryListTwo) {
-                                resultList.add(new RecordToFile(outerRecord.getId(), outerRecord.getValue(), innerRecord.getValue()));
+        while (it1.hasNext() || it2.hasNext()) {
+            System.out.println("CURRENT: " + currentLeft.getValue() + currentRight.getValue());
+            if (currentLeft.getId() < currentRight.getId()) {
+                System.out.println("more");
+                if (it1.hasNext()) currentLeft = it1.next();
+                else return resultList;
+            }
+            else if (currentLeft.getId() > currentRight.getId()) {
+                System.out.println("less");
+                System.out.println(it2.hasNext());
+                if (it2.hasNext()) currentRight = it2.next();
+                else return resultList;
+            }
+            else {
+                System.out.println("equal" + currentLeft.getValue() + " " + currentRight.getValue());
+                RecordFromFile nextLeft;
+                RecordFromFile nextRight;
+                LinkedList<RecordFromFile> leftTempList = new LinkedList<>();
+                LinkedList<RecordFromFile> rightTempList = new LinkedList<>();
+                if (it1.hasNext()) {
+                    if ((nextLeft = it1.next()).getId().equals(currentLeft.getId())) {
+                        leftTempList.add(currentLeft);
+                        leftTempList.add(nextLeft);
+                        while (it1.hasNext()) {
+                            if ((currentLeft = nextLeft).getId().equals((nextLeft = it1.next()).getId())) {
+                                leftTempList.add(nextLeft);
+                                System.out.println("added left " + nextLeft.getValue());
+                            } else {
+                                currentLeft = nextLeft;
+                                break;
                             }
                         }
-                        continue;
-                    }
-                    resultList.add(new RecordToFile(listOneElem.getId(), listOneElem.getValue(), listTwoElem.getValue()));
-                    if (leftOrRight) {
-                        index2++;
                     } else {
-                        index1++;
+                        System.out.println("ELSE");
+                        it1.previous();
                     }
                 }
+
+                if (it2.hasNext()) {
+                    if ((nextRight = it2.next()).getId().equals(currentRight.getId())) {
+                        rightTempList.add(currentRight);
+                        rightTempList.add(nextRight);
+                        System.out.println("preadded" + currentRight.getValue() + " " + nextRight.getValue());
+                        while (it2.hasNext()) {
+                            if ((currentRight = nextRight).getId().equals((nextRight = it2.next()).getId())) {
+                                rightTempList.add(nextRight);
+                                System.out.println("added right" + nextRight.getValue());
+                            } else {
+                                currentRight = nextRight;
+                                System.out.println("else");
+                                break;
+                            }
+                        }
+                    } else {
+
+                        System.out.println("ELSE");
+                        it2.previous();
+                    }
+                }
+                if (!leftTempList.isEmpty() && !rightTempList.isEmpty()) {
+                    for (RecordFromFile recordOuter : leftTempList) {
+                        for (RecordFromFile recordInner : rightTempList) {
+                            resultList.add(new RecordToFile(recordOuter.getId(), recordOuter.getValue(), recordInner.getValue()));
+                        }
+                    }
+                }
+
+                else if (rightTempList.isEmpty() && leftTempList.isEmpty()) {
+                    System.out.println("added one");
+                    resultList.add(new RecordToFile(currentLeft.getId(), currentLeft.getValue(), currentRight.getValue()));
+                    if (it1.hasNext()){
+                        System.out.println("left = " + currentLeft.getValue());
+                        currentLeft = it1.next();
+                    }
+                    else return resultList;
+                    if (it2.hasNext()) {
+                        System.out.println(it2.nextIndex());
+                        System.out.println("right = " + currentRight.getValue());
+                        currentRight = it2.next();
+                    }
+                    else return resultList;
+                }
+
+                else if (leftTempList.isEmpty()) {
+                    for (RecordFromFile record : rightTempList) {
+                        resultList.add(new RecordToFile(currentLeft.getId(), currentLeft.getValue(), record.getValue()));
+                    }
+                }
+
+                else {
+                    for (RecordFromFile record : leftTempList) {
+                        resultList.add(new RecordToFile(record.getId(), record.getValue(), currentRight.getValue()));
+                    }
+                }
+            }
+            if (!(it1.hasNext() || it2.hasNext())) {
+                if (currentLeft.getId().equals(currentRight.getId())) {
+                    resultList.add(new RecordToFile(currentLeft.getId(), currentLeft.getValue(), currentRight.getValue()));
+                }
+            }
         }
         return resultList;
     }
 
-    public List<RecordToFile> buildHashMapImpl(List<List<RecordFromFile>> bothLists) {
-        HashMap<Integer, List<RecordFromFile>> mapOne = createHashMapFromList(bothLists.get(0));
-        HashMap<Integer, List<RecordFromFile>> mapTwo = createHashMapFromList(bothLists.get(1));
+    public List<RecordToFile> buildHashMapImpl(List<RecordFromFile> recordsFromArrayListOne, List<RecordFromFile> recordsFromArrayListTwo) {
+        HashMap<Integer, List<RecordFromFile>> mapOne = createHashMapFromList(recordsFromArrayListOne);
+        HashMap<Integer, List<RecordFromFile>> mapTwo = createHashMapFromList(recordsFromArrayListTwo);
         List<RecordToFile> resultList = new ArrayList<>();
 
         for (List<RecordFromFile> recordListOuter : mapOne.values()) {
+            if (mapTwo.get(recordListOuter.get(0).getId()) == null) {
+                continue;
+            }
             for (RecordFromFile recordFromMapOne : recordListOuter) {
-                if (mapTwo.get(recordFromMapOne.getId()) == null) {
-                    continue;
-                }
                 for (RecordFromFile recordFromMapTwo : mapTwo.get(recordFromMapOne.getId())){
                     resultList.add(new RecordToFile(recordFromMapOne.getId(), recordFromMapOne.getValue(), recordFromMapTwo.getValue()));
                 }
