@@ -16,7 +16,6 @@ public class Reader {
         CollectionBuilder cb = new CollectionBuilder();
         try (BufferedReader bf = new BufferedReader(new FileReader(fileName))) {
             String line;
-            System.out.println(fileName.substring(32));
             while ((line = bf.readLine())!=null) {
                 System.out.println(++lineNum);
                 cb.fillArrayList(line, records);

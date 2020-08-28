@@ -25,12 +25,9 @@ public class Main {
             System.out.println("В параметры запуска программы передано меньше двух значений");
             return;
         }
-        List<List<RecordFromFile>> bothLists = new ArrayList<>();
-        bothLists.add(recordsFromArrayListOne);
-        bothLists.add(recordsFromArrayListTwo);
 
-        System.out.println(cb.buildArrayListImpl(bothLists));
-        System.out.println(cb.buildLinkedListImpl(bothLists));
-        System.out.println(cb.buildHashMapImpl(bothLists));
+        //System.out.println(cb.buildArrayListImpl(recordsFromArrayListOne, recordsFromArrayListTwo));
+        System.out.println(cb.buildLinkedListImpl(recordsFromArrayListOne, recordsFromArrayListTwo));
+        //System.out.println(cb.buildHashMapImpl(recordsFromArrayListOne, recordsFromArrayListTwo));
     }
 }
